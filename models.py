@@ -82,4 +82,34 @@ class Usuarios:
 
 
 
+########################
+### CLASE MODELO DOCUMENTOS
+class Documentos:
+
+    def insertData(data):
+
+        try: 
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "INSERT INTO documentos (user_id,name,size) values (%s,%s,%s)"
+            cursor.execute(sql,[data['user'],data['name'],data['size']])
+
+            sql = "SELECT * FROM documentos WHERE user_id = %s"
+            cursor.execute(sql,[data['user']])
+
+            result = fetchObjectAllData(cursor)
+
+            return result
+        except(Exception,psycopg2.DatabaseError) as error:
+            conn.rollback()
+            return "Sorry, can't insert into documentos"
+        finally: 
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+
+
+
 

@@ -1,6 +1,6 @@
-from fastapi import FastAPI,Response,Request,File,UploadFile
+from fastapi import FastAPI,Response,Request,File,UploadFile,Form
 from bodyRequest import *
-from models import Usuarios
+from models import *
 from typing import Union
 
 app = FastAPI()
@@ -50,14 +50,16 @@ def login(req: LoginBodyRequest):
 
 # REGISTRO DE DOCUMENTOS
 @app.post('/document')
-def saveDocuments(request: Request):
+async def saveDocuments(request: Request, file: Union[UploadFile,None] = File(...)):
+    token = request.headers['api-token']
+    data = Usuarios.getUserByToken(token)
 
-    data = Usuarios.getUserByToken(request.headers['api-token'])
-
-    return data
+    # SAVE INTO DOCUMENTS TABLE
+    res = Documentos.insertData({
+        'user': data['id'],
+        'size': file.size,
+        'name': file.filename,
+    })
     
-    return {
-        'file_size': file.size,
-        'file_name': file.filename,
-    }
+    return res
 

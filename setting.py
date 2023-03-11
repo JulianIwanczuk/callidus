@@ -58,6 +58,22 @@ def fetchObjectData(cursor):
         data[cols[index]] = row
 
     return data
+        
+# FETCH OBJECT DATA
+def fetchObjectAllData(cursor):
+    data = {}
+    list_ = []
+
+    rows = cursor.fetchall()
+    cols = list(map(lambda x: x[0], cursor.description))
+    
+    for key,elm in enumerate(rows):
+        for index,row in enumerate(elm):
+            data[cols[index]] = row
+
+        list_.append(dict(data))
+
+    return list_
 
 
 
