@@ -34,8 +34,8 @@ class Usuarios:
             cursor.close()
             conn.close()
 
-
-    def verifyTokenDate(data):
+    @classmethod
+    def verifyTokenDate(self,data):
 
         try:
             conn = connect()
@@ -61,6 +61,45 @@ class Usuarios:
             conn.close()
 
 
+    def generateToken(data):
+
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+            token = data['email']+str(datetime.datetime.now())
+
+            sql = "INSERT INTO session_log (user_id,token) VALUES (%s,MD5(%s))"
+            cursor.execute(sql,[data['id'],token])
+
+            return True
+        except:
+            conn.rollback()
+            return False
+        finally:
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+
+    def closeSession(data):
+
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "UPDATE session_log SET status = %s WHERE user_id = %s"
+            cursor.execute(sql,[0,data['id']])
+
+            return True
+        except:
+            conn.rollback()
+            return False
+        finally:
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+
     def getUserByToken(token):
 
         try:
@@ -77,6 +116,98 @@ class Usuarios:
         finally:
             cursor.close()
             conn.close()
+
+
+    def getUserFullDataByToken(token):
+
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "SELECT u.*,sl.token FROM session_log AS sl "
+            sql += "INNER JOIN usuarios AS u ON sl.user_id = u.id "
+            sql += "WHERE sl.token = %s AND sl.status = 1" 
+
+            cursor.execute(sql,[token])
+            data = fetchObjectData(cursor)
+
+            return data
+        except(Exception, psycopg2.DatabaseError) as error:
+            return "Can't get user data"
+        finally:
+            cursor.close()
+            conn.close()
+
+
+    def signUp(data):
+
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "SELECT * FROM usuarios WHERE username = %s OR email = %s"
+            cursor.execute(sql,[data.username,data.email])
+
+            rows = cursor.fetchall()
+
+            if len(rows) > 0:
+                return False
+
+            sql = "INSERT INTO usuarios (username,password,fullname,email,is_active,category) VALUES (%s,MD5(%s),%s,%s,%s,%s)"
+            cursor.execute(sql,[
+                 data.username
+                ,data.password
+                ,data.fullname
+                ,data.email
+                ,data.is_active
+                ,data.category
+            ])
+
+            return True
+        except(Exception,psycopg2.DatabaseError) as error:
+            conn.rollback()
+            return False
+        finally:
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+
+    def signUpCompany(data):
+
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "SELECT * FROM usuarios WHERE username = %s OR email = %s"
+            cursor.execute(sql,[data.username,data.email])
+
+            rows = cursor.fetchall()
+
+            if len(rows) > 0:
+                return False
+
+            sql = "INSERT INTO usuarios (username,password,fullname,email,is_active,category,business_name,business_code) VALUES (%s,MD5(%s),%s,%s,%s,%s,%s,%s)"
+            cursor.execute(sql,[
+                 data.username
+                ,data.password
+                ,data.fullname
+                ,data.email
+                ,data.is_active
+                ,data.category
+                ,data.business_name
+                ,data.business_code
+            ])
+
+            return True
+        except(Exception,psycopg2.DatabaseError) as error:
+            conn.rollback()
+            return False
+        finally:
+            conn.commit()
+            cursor.close()
+            conn.close()
+
 
 
 
@@ -109,6 +240,21 @@ class Documentos:
             cursor.close()
             conn.close()
 
+    
+    def getFilesList(id):
+
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "SELECT * FROM documentos WHERE user_id = %s"
+            cursor.execute(sql,[id])
+
+            data = fetchObjectAllData(cursor)
+
+            return data
+        except:
+            return None
 
 
 
