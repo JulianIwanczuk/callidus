@@ -11,8 +11,9 @@ class DocumentBodyRequest(BaseModel):
     file: object
 
 class UserBodyRequest(BaseModel):
-    username: str
+    username: str = None
     password: str
+    confirm: str = None
     fullname: str
     email: str
     category: int = 2

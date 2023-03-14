@@ -4,13 +4,26 @@ from bodyRequest import *
 from models import *
 from typing import Union
 import json
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
 
 routes = [
      '/'
     ,'/login'
+    ,'/signup'
+    ,'/signup-company'
 ]
+
+# Agrega las URLs permitidas en la lista 'allow_origins'
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 # CAPA INTERMEDIA DE VALIDACION
 @app.middleware('http')
@@ -47,6 +60,8 @@ async def login(
     isLogin = True
     isCaduced = False
 
+    print(request.headers['Content-Type'] == 'application/json','<<<<<<<')
+
     if request.headers['Content-Type'] == 'application/json':
         item = await request.json()
     else:
@@ -80,7 +95,8 @@ async def login(
     except: 
         return {
             'msg': 'Login fail', 
-            'data': None 
+            'data': None,
+            'isLogin': False
         }
     
 
@@ -120,12 +136,12 @@ async def signup(
 
     if res:
         return {
-            'active': True,
+            'action': True,
             'msg': 'Customer signup!'
         }
     else:
         return {
-            'active': False,
+            'action': False,
             'msg': "Can't customer signup!"
         }
 
@@ -147,12 +163,12 @@ async def signupCompany(
 
     if res:
         return {
-            'active': True,
+            'action': True,
             'msg': 'Company signup!'
         }
     else:
         return {
-            'active': False,
+            'action': False,
             'msg': "Can't company signup!"
         }
     
