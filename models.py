@@ -88,7 +88,7 @@ class Usuarios:
             cursor = conn.cursor()
 
             sql = "UPDATE session_log SET status = %s WHERE user_id = %s"
-            cursor.execute(sql,[0,data['id']])
+            cursor.execute(sql,[0,data['user_id']])
 
             return True
         except:

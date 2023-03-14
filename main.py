@@ -7,14 +7,15 @@ import json
 from fastapi.middleware.cors import CORSMiddleware
 
 
-app = FastAPI()
-
 routes = [
      '/'
     ,'/login'
+    ,'/logout'
     ,'/signup'
     ,'/signup-company'
 ]
+
+app = FastAPI()
 
 # Agrega las URLs permitidas en la lista 'allow_origins'
 app.add_middleware(
@@ -49,7 +50,7 @@ async def verifyEntrance(request: Request, next):
 #### RUTAS #################
 @app.get('/')
 def index(): 
-    return { "msg": "Welcome to Api CallIdUs" }
+    return JSONResponse(content={ "msg": "Welcome to Api CallIdUs" })
 
 
 # LOGIN DE USUARIOS
@@ -59,8 +60,6 @@ async def login(
 ) -> Response: 
     isLogin = True
     isCaduced = False
-
-    print(request.headers['Content-Type'] == 'application/json','<<<<<<<')
 
     if request.headers['Content-Type'] == 'application/json':
         item = await request.json()
@@ -86,35 +85,36 @@ async def login(
             isCaduced = True
 
         return {
+            'action': isLogin,
             'msg': 'Login', 
             'isCaduced': isCaduced, 
             'daysCaduced': td['days'],
             'token': td['token'],
-            'isLogin': isLogin
         }
     except: 
         return {
+            'action': False,
             'msg': 'Login fail', 
             'data': None,
-            'isLogin': False
         }
     
 
-@app.get('/logout')
-def logout(request:Request):
+@app.post('/logout')
+async def logout(request:Request) -> Response:
 
-    token = request.headers['api-token']
-    res = Usuarios.getUserFullDataByToken(token)
+    token = request.headers['api-key']
+
+    res = Usuarios.getUserByToken(token)
     clo = Usuarios.closeSession(res)
 
     if clo: 
         return {
-            'logout': True,
+            'action': True,
             'msg': 'Session close!'
         }
     else:
         return {
-            'logout': False,
+            'action': False,
             'msg': "Can't disable the session"
         }
 
