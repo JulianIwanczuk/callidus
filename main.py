@@ -4,7 +4,9 @@ from bodyRequest import *
 from models import *
 from typing import Union
 import json
+import psycopg2
 from fastapi.middleware.cors import CORSMiddleware
+from setting import *
 
 
 routes = [
@@ -13,6 +15,7 @@ routes = [
     ,'/logout'
     ,'/signup'
     ,'/signup-company'
+    ,'/db-test'
 ]
 
 app = FastAPI()
@@ -51,6 +54,16 @@ async def verifyEntrance(request: Request, next):
 @app.get('/')
 def index(): 
     return JSONResponse(content={ "msg": "Welcome to Api CallIdUs" })
+
+@app.get('/db-test')
+async def dbTest(request: Request):
+    try:
+        conn = connect()
+
+        return { "msg": "connection grand!"}
+    except(Exception, psycopg2.DatabaseError) as error:
+        return { "msg": "connection failed [:(]"}
+
 
 
 # LOGIN DE USUARIOS
