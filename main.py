@@ -16,6 +16,7 @@ routes = [
     ,'/signup'
     ,'/signup-company'
     ,'/db-test'
+    ,'/get-days-remaining'
 ]
 
 app = FastAPI()
@@ -101,7 +102,7 @@ async def login(
             'action': isLogin,
             'msg': 'Login', 
             'isCaduced': isCaduced, 
-            'daysCaduced': td['days'],
+            'daysCaduced': res['days_caduced'],
             'token': td['token'],
         }
     except: 
@@ -218,7 +219,18 @@ async def documentList(request:Request) -> Response:
     return list_
 
 
+@app.get('/get-days-remaining')
+async def getDaysRemaining(request: Request) -> Response:
 
+    token = request.headers['api-key']
+
+    try:
+        # VERIFICA LA DATA DEL USUARIO
+        res = Usuarios.getUserFullDataByToken(token)
+
+        return { "days_caduced": res["days_caduced"] }
+    except:
+        return False
 
 
 

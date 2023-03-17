@@ -4,7 +4,8 @@ from typing import Optional
 import datetime
 
 class LoginBodyRequest(BaseModel): 
-    username: str
+    username: str = None
+    email: str = None
     password: str
 
 class DocumentBodyRequest(BaseModel):

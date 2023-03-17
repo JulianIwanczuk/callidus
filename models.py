@@ -43,23 +43,44 @@ class Usuarios:
 
             sql = "SELECT * FROM session_log where user_id = %s AND status = 1"
             cursor.execute(sql,[data['id']])
-            data = fetchObjectData(cursor)
+            rs = fetchObjectData(cursor)
 
             date = datetime.datetime.now()
             range = calendar.monthrange(date.year,date.month)
             lastdate = datetime.datetime(date.year,date.month,range[1])
-            fec = lastdate - data['date_create']
+            fec = lastdate - rs['date_create']
+
+            self.assigningDayCaduced(fec.days, data['id'])
 
             return {
                 'days': fec.days,
-                'token': data['token']
+                'token': rs['token']
             }
-        except:
+        except(Exception,psycopg2.DatabaseError) as error:
+            print(error)
             return False
         finally: 
             cursor.close()
             conn.close()
 
+    def assigningDayCaduced(days,userId):
+
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            if days > 0:
+                sql = "UPDATE usuarios set days_caduced = %s where id = %s"
+                cursor.execute(sql,[days,userId]) 
+
+            return True
+        except:
+            conn.rollback()
+            return False
+        finally: 
+            conn.commit()
+            cursor.close()
+            conn.close()
 
     def generateToken(data):
 
@@ -88,7 +109,7 @@ class Usuarios:
             cursor = conn.cursor()
 
             sql = "UPDATE session_log SET status = %s WHERE user_id = %s"
-            cursor.execute(sql,[0,data['user_id']])
+            cursor.execute(sql,[0,data['id']])
 
             return True
         except:

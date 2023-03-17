@@ -40,7 +40,7 @@ def connect():
 
 # BALIDA CORREO
 def solve(s):
-        pat = "^[a-zA-Z0-9-_.]+@[a-zA-Z0-9]+\.[a-z]{1,3}$"
+        pat = '[^@]+@[^@]+\.[^@]+'
         if re.match(pat,s):
             return True
         else:
