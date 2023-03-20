@@ -14,7 +14,6 @@ import stripe
 routes = [
      '/'
     ,'/login'
-    ,'/logout'
     ,'/signup'
     ,'/signup-company'
     ,'/db-test'
@@ -30,14 +29,14 @@ class mainMiddleware(BaseHTTPMiddleware):
         if request.url.path not in routes:
             apiKey = request.headers.get('api-key')
 
-        if apiKey is None:
-            return JSONResponse(content={'error': 'Api-key is required'},status_code=403)
-        
-        # OBTENGO LOS DATOS DE SESSION POR EL TOKEN
-        ut = Usuarios.getUserByToken(apiKey)
-        
-        if type(ut) is not dict:
-            return JSONResponse(content={'error': 'Is not a valid token'},status_code=200)
+            if apiKey is None:
+                return JSONResponse(content={'error': 'Api-key is required'},status_code=403)
+            
+            # OBTENGO LOS DATOS DE SESSION POR EL TOKEN
+            ut = Usuarios.getUserByToken(apiKey)
+            
+            if type(ut) is not dict:
+                return JSONResponse(content={'error': 'Is not a valid token'},status_code=200)
 
         response = await next(request)
         return response
