@@ -1,5 +1,6 @@
 import psycopg2,datetime,calendar
 from setting import *
+from dateutil.relativedelta import *
 
 class Usuarios: 
 
@@ -34,6 +35,8 @@ class Usuarios:
             cursor.close()
             conn.close()
 
+            
+
     @classmethod
     def verifyTokenDate(self,data):
 
@@ -45,15 +48,25 @@ class Usuarios:
             cursor.execute(sql,[data['id']])
             rs = fetchObjectData(cursor)
 
-            date = datetime.datetime.now()
-            range = calendar.monthrange(date.year,date.month)
-            lastdate = datetime.datetime(date.year,date.month,range[1])
-            fec = lastdate - rs['date_create']
+            # OBTENGO LAS AMORTIZACIONES PAGAS
+            amoTrue = self.getAmortizations(data,True)
+            # OBTENGO LAS AMORTIZACIONES NO PAGAS
+            amoFalse = self.getAmortizations(data,False)
+            # CALCULO LA FECHA DEL PROXIMO PAGO
+            dateTrue = amoFalse[0]['payment_date']
+            dp = dateTrue.day
+            mp = dateTrue.month
+            yp = dateTrue.year
+            deltaP = datetime.date(yp,mp,dp) # OBTENGO EL FORMATO INDICADO PARA COMPARAR
+            dateToday = datetime.date.today()
+            fec =  deltaP - dateToday
+            days = fec.days - 1
 
-            self.assigningDayCaduced(fec.days, data['id'])
+            # ASIGNO LOS DIAS DE CADUCIDAD
+            self.assigningDayCaduced(days, data['id'])
 
             return {
-                'days': fec.days,
+                'days': days,
                 'token': rs['token']
             }
         except(Exception,psycopg2.DatabaseError) as error:
@@ -63,15 +76,16 @@ class Usuarios:
             cursor.close()
             conn.close()
 
+
+
     def assigningDayCaduced(days,userId):
 
         try:
             conn = connect()
             cursor = conn.cursor()
 
-            if days > 0:
-                sql = "UPDATE usuarios set days_caduced = %s where id = %s"
-                cursor.execute(sql,[days,userId]) 
+            sql = "UPDATE usuarios set days_caduced = %s where id = %s"
+            cursor.execute(sql,[days,userId])
 
             return True
         except:
@@ -160,7 +174,8 @@ class Usuarios:
             conn.close()
 
 
-    def signUp(data):
+    @classmethod
+    def signUp(self,data):
 
         try:
             conn = connect()
@@ -170,6 +185,8 @@ class Usuarios:
             cursor.execute(sql,[data.username,data.email])
 
             rows = cursor.fetchall()
+
+            self.createAmortizations(rows[0])
 
             if len(rows) > 0:
                 return False
@@ -193,8 +210,73 @@ class Usuarios:
             cursor.close()
             conn.close()
 
+    # CREA LA AMORTIZACION
+    def createAmortizations(data):
 
-    def signUpCompany(data):
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            months = [1,2,3,4,5,6,7,8,9,10,11,12]
+            sql = "INSERT INTO amortizaciones (user_id,quota,payment_date) values (%s,%s,%s)"
+
+            for index,month in enumerate(months):
+                date = datetime.datetime.now() + relativedelta(months=index)
+                cursor.execute(sql,[data['id'],month,date])
+                
+
+            return True
+        except:
+            conn.rollback()
+            return False
+        finally: 
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+
+    # OBTENGO LAS AMORTIZACIONES
+    def getAmortizations(data,bool=None):
+        
+        conn = connect()
+        cursor = conn.cursor()
+
+        if bool is None:
+            sql = "SELECT * FROM amortizaciones WHERE user_id = %s ORDER BY quota"
+        elif bool != False:
+            sql = "SELECT * FROM amortizaciones WHERE user_id = %s AND paid = true ORDER BY quota"
+        else:
+            sql = "SELECT * FROM amortizaciones WHERE user_id = %s AND paid = false ORDER BY quota"
+
+        cursor.execute(sql,[data['id']])
+
+        data = fetchObjectAllData(cursor)
+
+        return data
+
+
+    def setPayAmortizations(amo_id,user_id):
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "UPDATE amortizaciones SET paid = true WHERE user_id = %s AND id = %s"
+            cursor.execute(sql,[user_id,amo_id])
+
+            return True
+        except:
+            conn.rollback()
+            return False
+        finally: 
+            conn.commit()
+            cursor.close()
+            conn.close()
+        
+
+
+
+    @classmethod
+    def signUpCompany(self,data):
 
         try:
             conn = connect()
@@ -204,6 +286,8 @@ class Usuarios:
             cursor.execute(sql,[data.username,data.email])
 
             rows = cursor.fetchall()
+
+            self.createAmortizations(rows[0])
 
             if len(rows) > 0:
                 return False

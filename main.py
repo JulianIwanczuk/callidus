@@ -6,7 +6,9 @@ from typing import Union
 import json
 import psycopg2
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from setting import *
+import stripe
 
 
 routes = [
@@ -16,26 +18,17 @@ routes = [
     ,'/signup'
     ,'/signup-company'
     ,'/db-test'
-    ,'/get-days-remaining'
 ]
+
+origins = ["http://localhost:3000","http://localhost:8000"]
 
 app = FastAPI()
 
-# Agrega las URLs permitidas en la lista 'allow_origins'
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
-
 # CAPA INTERMEDIA DE VALIDACION
-@app.middleware('http')
-async def verifyEntrance(request: Request, next):
-    
-    if request.url.path not in routes:
-        apiKey = request.headers.get('api-key')
+class mainMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self,request: Request, next):
+        if request.url.path not in routes:
+            apiKey = request.headers.get('api-key')
 
         if apiKey is None:
             return JSONResponse(content={'error': 'Api-key is required'},status_code=403)
@@ -46,8 +39,20 @@ async def verifyEntrance(request: Request, next):
         if type(ut) is not dict:
             return JSONResponse(content={'error': 'Is not a valid token'},status_code=200)
 
-    response = await next(request)
-    return response
+        response = await next(request)
+        return response
+    
+    
+
+
+# Agrega las URLs permitidas en la lista 'allow_origins'
+app.add_middleware(mainMiddleware)
+app.add_middleware(CORSMiddleware,
+                    allow_origins=origins,
+                    allow_credentials=True,
+                    allow_methods=["*"],
+                    allow_headers=["*"],
+                )
 
 
 ############################
@@ -224,13 +229,59 @@ async def getDaysRemaining(request: Request) -> Response:
 
     token = request.headers['api-key']
 
-    try:
-        # VERIFICA LA DATA DEL USUARIO
-        res = Usuarios.getUserFullDataByToken(token)
+    res = Usuarios.getUserFullDataByToken(token)
+    
+    if res['days_caduced'] > 0:
+        return {
+            "action": True,
+            "days_caduced": res["days_caduced"]
+        }
+    else:
+        return { 
+            "action": False,
+            "days_caduced": 0
+        }
 
-        return { "days_caduced": res["days_caduced"] }
-    except:
-        return False
 
+@app.get('/validate-payments')
+async def getPaymentList(request: Request) -> Response:
+
+    paids = 0
+    token = request.headers['api-key']
+    params = config('stripe_data.ini','stripe')
+
+    res = Usuarios.getUserFullDataByToken(token)
+
+    stripe.api_key = params['stripe_api_key']
+
+    list = stripe.Charge.list()
+
+    # OBTENGO TODAS LAS AMORTIZACIONES
+    amo = Usuarios.getAmortizations(res)
+
+    for index,data in enumerate(list):
+        if data['billing_details']['email'] == res['email']:
+            if data['paid'] != False:
+                Usuarios.setPayAmortizations(amo[index]['id'],res['id'])
+                paids = paids + 1 
+
+    # OBTENGO SOLO LAS AMORTIZACIONES PAGAS
+    amoTrue = Usuarios.getAmortizations(res,True)
+    
+    if len(amoTrue) == paids:
+        return {
+            'action': True,
+            'msg': 'Esta al dia'
+        }
+    elif len(amoTrue) < paids:
+        return {
+            'action': False,
+            'msg': 'Tiene pagos pendientes'
+        }
+    elif paids > len(amoTrue):
+        return {
+            'action': True,
+            'msg': 'Tiene pagos anticipados'
+        }
 
 
