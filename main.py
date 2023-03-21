@@ -14,6 +14,7 @@ import stripe
 routes = [
      '/'
     ,'/login'
+    ,'/google-login'
     ,'/signup'
     ,'/signup-company'
     ,'/db-test'
@@ -116,6 +117,85 @@ async def login(
             'data': None,
         }
     
+# LOGIN CON GOOGLE
+@app.post('/google-login')
+async def googleLogin(
+     request: Request
+) -> Response: 
+    isLogin = True
+    isCaduced = False
+
+    if request.headers['Content-Type'] == 'application/json':
+        item = await request.json()
+    else:
+        item = await request.form()
+
+    #item = LoginBodyRequest(** item)
+
+    try:
+        user = Usuarios.getuserByEmail(item['email'])
+        keys = user.keys()
+
+        if len(keys) != 0:
+            # VERIFICA LA DATA DEL USUARIO
+            res = user
+        else: 
+
+            form = {
+                'username': '',
+                'password': '',
+                'email': item['email'],
+                'fullname': item['displayName'],
+                'category': 2,
+                'status': 1,
+                'is_active': True,
+                'business_name': None,
+                'business_code': None,
+                'payment_date': datetime.datetime.now()
+            }
+
+            _format = UserBodyRequest(** form)
+
+            res = Usuarios.signUp(_format)
+
+            user = Usuarios.getuserByEmail(item['email'])
+
+            Usuarios.createAmortizations(user)
+
+            # VERIFICA LA DATA DEL USUARIO
+            res = user
+        
+
+        # CIERRA POSIBLES SESIONES PREVIAS
+        clo = Usuarios.closeSession(res)
+        # GENERA UN TOKEN NUEVO
+        to = Usuarios.generateToken(res)
+        # CALCULA LA CADUCIDAD DE LA SESION
+        td = Usuarios.verifyTokenDate(res)
+
+
+        if res is None:
+            isLogin = False
+
+        if td['days'] == 0:
+            isCaduced = True
+
+
+
+        return {
+            'action': isLogin,
+            'msg': 'Login', 
+            'isCaduced': isCaduced, 
+            'daysCaduced': res['days_caduced'],
+            'token': td['token'],
+        }
+    except: 
+        return {
+            'action': False,
+            'msg': 'Login fail', 
+            'data': None,
+        }
+    
 
 @app.post('/logout')
 async def logout(request:Request) -> Response:
@@ -152,6 +232,9 @@ async def signup(
     
     res = Usuarios.signUp(item)
 
+    user = Usuarios.getuserByEmail(item['email'])
+    Usuarios.createAmortizations(user)
+
     if res:
         return {
             'action': True,
@@ -178,6 +261,9 @@ async def signupCompany(
     item = UserBodyRequest(** item)
     
     res = Usuarios.signUpCompany(item)
+
+    user = Usuarios.getuserByEmail(item['email'])
+    Usuarios.createAmortizations(user)
 
     if res:
         return {

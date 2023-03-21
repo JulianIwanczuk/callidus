@@ -1,4 +1,4 @@
-import psycopg2,datetime,calendar
+import psycopg2,datetime,calendar,time
 from setting import *
 from dateutil.relativedelta import *
 
@@ -61,6 +61,9 @@ class Usuarios:
             dateToday = datetime.date.today()
             fec =  deltaP - dateToday
             days = fec.days - 1
+
+            if days < 0:
+                days = 30
 
             # ASIGNO LOS DIAS DE CADUCIDAD
             self.assigningDayCaduced(days, data['id'])
@@ -186,10 +189,9 @@ class Usuarios:
 
             rows = cursor.fetchall()
 
-            self.createAmortizations(rows[0])
-
             if len(rows) > 0:
                 return False
+        
 
             sql = "INSERT INTO usuarios (username,password,fullname,email,is_active,category) VALUES (%s,MD5(%s),%s,%s,%s,%s)"
             cursor.execute(sql,[
@@ -217,12 +219,18 @@ class Usuarios:
             conn = connect()
             cursor = conn.cursor()
 
-            months = [1,2,3,4,5,6,7,8,9,10,11,12]
-            sql = "INSERT INTO amortizaciones (user_id,quota,payment_date) values (%s,%s,%s)"
+            sql = "SELECT * FROM amortizaciones WHERE user_id = %s"
+            cursor.execute(sql,[data['id']])
 
-            for index,month in enumerate(months):
-                date = datetime.datetime.now() + relativedelta(months=index)
-                cursor.execute(sql,[data['id'],month,date])
+            rows = cursor.fetchall()
+
+            if(len(rows) == 0):
+                months = [1,2,3,4,5,6,7,8,9,10,11,12]
+                sql = "INSERT INTO amortizaciones (user_id,quota,payment_date) values (%s,%s,%s)"
+
+                for index,month in enumerate(months):
+                    date = datetime.datetime.now() + relativedelta(months=index)
+                    cursor.execute(sql,[data['id'],month,date])
                 
 
             return True
@@ -271,7 +279,22 @@ class Usuarios:
             conn.commit()
             cursor.close()
             conn.close()
-        
+
+
+    @classmethod
+    def getuserByEmail(self,email):
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "SELECT * FROM usuarios WHERE email = %s AND status = 1"
+            cursor.execute(sql,[email])
+
+            data = fetchObjectData(cursor)
+
+            return data
+        except:
+            return {}
 
 
 
@@ -286,8 +309,6 @@ class Usuarios:
             cursor.execute(sql,[data.username,data.email])
 
             rows = cursor.fetchall()
-
-            self.createAmortizations(rows[0])
 
             if len(rows) > 0:
                 return False
