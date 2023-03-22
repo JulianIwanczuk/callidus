@@ -40,7 +40,6 @@ typing_extensions==4.5.0
 tzdata==2022.7
 urllib3==1.26.15
 uvicorn==0.20.0
-vboxapi==1.0
 watchfiles==0.18.1
 websockets==10.4
 Werkzeug==2.2.2
