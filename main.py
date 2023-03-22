@@ -20,7 +20,11 @@ routes = [
     ,'/db-test'
 ]
 
-origins = ["http://localhost:3000","http://localhost:8000"]
+origins = [
+     "http://localhost:3000"
+    ,"http://localhost:8000"
+    ,"https://chatdemo.callidusai.com"
+]
 
 app = FastAPI()
 
