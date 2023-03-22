@@ -1,8 +1,8 @@
 from configparser import ConfigParser
 import psycopg2,re
 
-#filename='database_remote.ini'
-filename='database_local.ini'
+filename='database_remote.ini'
+#filename='database_local.ini'
 
 def config(filename,section='postgresql'):
     parser = ConfigParser()
