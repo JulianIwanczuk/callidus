@@ -24,6 +24,7 @@ origins = [
      "http://localhost:3000"
     ,"http://localhost:8000"
     ,"https://chatdemo.callidusai.com"
+    ,"https://calliduschat.herokuapp.com"
 ]
 
 app = FastAPI()
