@@ -237,7 +237,7 @@ async def signup(
     
     res = Usuarios.signUp(item)
 
-    user = Usuarios.getuserByEmail(item['email'])
+    user = Usuarios.getuserByEmail(item.email)
     Usuarios.createAmortizations(user)
 
     if res:
@@ -267,7 +267,7 @@ async def signupCompany(
     
     res = Usuarios.signUpCompany(item)
 
-    user = Usuarios.getuserByEmail(item['email'])
+    user = Usuarios.getuserByEmail(item.email)
     Usuarios.createAmortizations(user)
 
     if res:
