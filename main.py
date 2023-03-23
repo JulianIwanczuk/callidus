@@ -145,12 +145,11 @@ async def googleLogin(
             # VERIFICA LA DATA DEL USUARIO
             res = user
         else: 
-
             form = {
                 'username': '',
                 'password': '',
                 'email': item['email'],
-                'fullname': item['displayName'],
+                'fullname': item['displayName'].encode('utf-8').decode('cp1252'),
                 'category': 2,
                 'status': 1,
                 'is_active': True,
