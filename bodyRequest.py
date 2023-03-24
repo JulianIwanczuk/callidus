@@ -3,6 +3,9 @@ from fastapi import Form
 from typing import Optional
 import datetime
 
+class TokenBodyRequest(BaseModel):
+    letter: str = None
+
 class LoginBodyRequest(BaseModel): 
     username: str = None
     email: str = None

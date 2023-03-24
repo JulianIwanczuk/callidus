@@ -10,6 +10,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from setting import *
 import stripe
 
+token = {}
 
 routes = [
      '/'
@@ -24,6 +25,7 @@ origins = [
      "http://localhost:3000"
     ,"http://localhost:8000"
     ,"https://chatdemo.callidusai.com"
+    ,"http://chatdemo.callidusai.com"
     ,"https://calliduschat.herokuapp.com"
 ]
 
@@ -32,6 +34,7 @@ app = FastAPI()
 # CAPA INTERMEDIA DE VALIDACION
 class mainMiddleware(BaseHTTPMiddleware):
     async def dispatch(self,request: Request, next):
+        apiKey = None
         if request.url.path not in routes:
             apiKey = request.headers.get('api-key')
 
@@ -43,6 +46,9 @@ class mainMiddleware(BaseHTTPMiddleware):
             
             if type(ut) is not dict:
                 return JSONResponse(content={'error': 'Is not a valid token'},status_code=200)
+
+        if apiKey is not None:    
+            token['in'] = apiKey
 
         response = await next(request)
         return response
@@ -76,12 +82,17 @@ async def dbTest(request: Request):
         return { "msg": "connection failed [:(]"}
 
 
+@app.get('/profile')
+async def profile(request: Request) -> Response:
+    token = request.headers['api-key']
+    data = Usuarios.getUserFullDataByToken(token)
+
+    return data
+
 
 # LOGIN DE USUARIOS
 @app.post('/login')
-async def login(
-     request: Request
-) -> Response: 
+async def login(request: Request) -> Response: 
     isLogin = True
     isCaduced = False
 
@@ -122,6 +133,7 @@ async def login(
             'data': None,
         }
     
+    
 # LOGIN CON GOOGLE
 @app.post('/google-login')
 async def googleLogin(
@@ -149,7 +161,7 @@ async def googleLogin(
                 'username': '',
                 'password': '',
                 'email': item['email'],
-                'fullname': item['displayName'].encode('utf-8').decode('cp1252'),
+                'fullname': item['displayName'],
                 'category': 2,
                 'status': 1,
                 'is_active': True,
@@ -233,11 +245,12 @@ async def signup(
         item = await request.form()
 
     item = UserBodyRequest(** item)
-    
+
     res = Usuarios.signUp(item)
 
     user = Usuarios.getuserByEmail(item.email)
     Usuarios.createAmortizations(user)
+    Usuarios.addUserTrackCategory(user['id'],1)
 
     if res:
         return {
@@ -268,6 +281,7 @@ async def signupCompany(
 
     user = Usuarios.getuserByEmail(item.email)
     Usuarios.createAmortizations(user)
+    Usuarios.addUserTrackCategory(user['id'],1)
 
     if res:
         return {
@@ -373,4 +387,11 @@ async def getPaymentList(request: Request) -> Response:
             'msg': 'Tiene pagos anticipados'
         }
 
+@app.get('/get-track-register')
+async def getTrackRegister(request: Request) -> Response:
+    token = request.headers['api-key']
+    res = Usuarios.getUserByToken(token)
+    data = Usuarios.getTrackRegisterAssign(res['user_id'])
+
+    return data
 

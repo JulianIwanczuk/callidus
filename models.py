@@ -162,8 +162,24 @@ class Usuarios:
             conn = connect()
             cursor = conn.cursor()
 
-            sql = "SELECT u.*,sl.token FROM session_log AS sl "
+            sql = "SELECT "
+            sql += "u.id" 
+            sql += ",u.username" 
+            sql += ",u.password" 
+            sql += ",u.fullname" 
+            sql += ",(case when u.status = 1 then 'active' else 'inactive' end) as status" 
+            sql += ",c.description as category" 
+            sql += ",u.date_create" 
+            sql += ",u.days_caduced" 
+            sql += ",u.email" 
+            sql += ",u.payment_date" 
+            sql += ",u.business_name" 
+            sql += ",u.business_code" 
+            sql += ",u.profile_avatar" 
+            sql += ",sl.token "
+            sql += "FROM session_log AS sl "
             sql += "INNER JOIN usuarios AS u ON sl.user_id = u.id "
+            sql += "INNER JOIN categorias AS c ON u.category = c.id "
             sql += "WHERE sl.token = %s AND sl.status = 1" 
 
             cursor.execute(sql,[token])
@@ -330,6 +346,52 @@ class Usuarios:
             conn.rollback()
             return False
         finally:
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+    
+    def getTrackRegisterAssign(id):
+
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "select "
+            sql += "crr.category_plan_name,"
+            sql += "crr.token_price,"
+            sql += "crr.mounth_subscription,"
+            sql += "crr.top_message_spend,"
+            sql += "crr.top_message_send "
+            sql += "from usuarios as u "
+            sql += "inner join usuarios_categoria_rastreos as ucr on u.id = ucr.user_id "
+            sql += "inner join categoria_rastreos_registrados as crr on ucr.crr_id = crr.id "
+            sql += "where crr.status = 1 and ucr.user_id = %s"
+            cursor.execute(sql,[id])
+
+            data = fetchObjectData(cursor)
+
+            return data
+        except:
+            return "not track available"
+        finally:
+            cursor.close()
+            conn.close()
+
+
+    def addUserTrackCategory(id,track_category):
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "INSERT INTO usuarios_categoria_rastreos (user_id,crr_id) values (%s,%s)"
+            cursor.execute(sql,[id,track_category])
+
+            return True 
+        except:
+            conn.rollback()
+            return "can't insert user in track"
+        finally: 
             conn.commit()
             cursor.close()
             conn.close()
