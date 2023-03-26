@@ -395,3 +395,37 @@ async def getTrackRegister(request: Request) -> Response:
 
     return data
 
+@app.get('/messages-send/{ms}')
+async def messagesSend(request: Request,ms: int) -> Response:
+
+    token = request.headers['api-key']
+
+    item = UcrBodyRequest()
+
+    user = Usuarios.getUserByToken(token)
+    crr = Usuarios.getTrackRegisterAssign(user['user_id'])
+    ucr = Usuarios.getUserCategoryTrack(user['user_id'])
+
+    if ms != ucr['message_spend']:
+        rs = Usuarios.setMessagesSpend(user['user_id'],ms,crr['token_price'])
+    else:
+        return {
+            'action': False,
+            'msg': 'no action!'
+        }
+    
+
+    if rs != False:
+        return {
+            'action': True,
+            'msg': 'done!'
+        }
+    else:
+        return {
+            'action': False,
+            'msg': 'fail!'
+        }
+
+
+
+
