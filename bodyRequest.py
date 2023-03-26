@@ -31,3 +31,10 @@ class SessionBodyRequest(BaseModel):
     token: str
     status: int
     date_create: datetime.datetime
+
+class UcrBodyRequest(BaseModel):
+    user_id: int = None
+    crr_id: int = None
+    date_crate: datetime.datetime = None
+    message_spend: int = None
+    cumulate: float = None

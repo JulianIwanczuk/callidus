@@ -362,17 +362,20 @@ class Usuarios:
             sql += "crr.token_price,"
             sql += "crr.mounth_subscription,"
             sql += "crr.top_message_spend,"
-            sql += "crr.top_message_send "
+            sql += "crr.top_message_send,"
+            sql += "ucr.message_spend,"
+            sql += "ucr.cumulate "
             sql += "from usuarios as u "
             sql += "inner join usuarios_categoria_rastreos as ucr on u.id = ucr.user_id "
             sql += "inner join categoria_rastreos_registrados as crr on ucr.crr_id = crr.id "
-            sql += "where crr.status = 1 and ucr.user_id = %s"
+            sql += "where crr.status = 1 and ucr.status = 1 and ucr.user_id = %s"
             cursor.execute(sql,[id])
 
             data = fetchObjectData(cursor)
 
             return data
         except:
+            print(cursor.query)
             return "not track available"
         finally:
             cursor.close()
@@ -397,6 +400,42 @@ class Usuarios:
             conn.close()
 
 
+    def setMessagesSpend(user_id,message_spend,token_price):
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            cumulate = message_spend * token_price
+
+            sql = "UPDATE usuarios_categoria_rastreos SET message_spend = %s,cumulate = %s WHERE user_id = %s AND status = 1"
+            cursor.execute(sql,[message_spend,cumulate,user_id])
+
+            return True
+        except:
+            conn.rollback()
+            return False
+        finally:
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+
+    def getUserCategoryTrack(user_id):
+        try:
+            conn = connect()
+            cursor = conn.cursor()
+
+            sql = "select * from usuarios_categoria_rastreos where user_id = %s and status = 1"
+            cursor.execute(sql,[user_id])
+
+            data = fetchObjectData(cursor)
+
+            return data
+        except:
+            return False
+        finally:
+            cursor.close()
+            conn.close()
 
 
 
