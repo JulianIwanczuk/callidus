@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from bodyRequest import *
 from models import *
 from typing import Union
-import json
+import json, requests
 import psycopg2
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -19,6 +19,9 @@ routes = [
     ,'/signup'
     ,'/signup-company'
     ,'/db-test'
+    ,'/legal_research/fact_pattern/intake'
+    ,'/legal_research/fact_pattern/answer'
+    ,'/legal_research/fact_pattern/continued_conversation'
 ]
 
 origins = [
@@ -426,6 +429,62 @@ async def messagesSend(request: Request,ms: int) -> Response:
             'msg': 'fail!'
         }
 
+#############################################################
+#################### MODULES-END-POINT ######################
+#############################################################
+host = "https://callidus.eastasia.cloudapp.azure.com/"
+cookie = {}
+
+@app.post('/legal_research/fact_pattern/intake')
+async def fact_pattern_intake(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type':'application/json',
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
 
 
+@app.post('/legal_research/fact_pattern/answer')
+async def fact_pattern_answer(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
+
+
+@app.post('/legal_research/fact_pattern/continued_conversation')
+async def fact_pattern_answer(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    return res.json()
 
