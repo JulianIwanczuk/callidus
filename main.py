@@ -22,6 +22,16 @@ routes = [
     ,'/legal_research/fact_pattern/intake'
     ,'/legal_research/fact_pattern/answer'
     ,'/legal_research/fact_pattern/continued_conversation'
+    ,'/legal_research/legal_question/question_intake'
+    ,'/legal_research/legal_question/question_answer'
+    ,'/legal_research/draft_1'
+    ,'/legal_research/draft_2'
+    ,'/legal_research/draft_3'
+    ,'/legal_research/draft_4'
+    ,'/legal_research/draft_5'
+    ,'/legal_research/draft_6'
+    ,'/legal_research/draft_7'
+    ,'/basic_bot'
 ]
 
 origins = [
@@ -473,7 +483,7 @@ async def fact_pattern_answer(request: Request) -> Response:
 
 
 @app.post('/legal_research/fact_pattern/continued_conversation')
-async def fact_pattern_answer(request: Request) -> Response:
+async def fact_pattern_continued_conversation(request: Request) -> Response:
 
     item = await request.json()
     url = host + request.url.path[1:]
@@ -488,3 +498,186 @@ async def fact_pattern_answer(request: Request) -> Response:
 
     return res.json()
 
+
+@app.post('/legal_research/legal_question/question_intake')
+async def question_intake(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
+
+
+@app.post('/legal_research/legal_question/question_answer')
+async def question_answer(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    return res.json()
+
+
+
+@app.post('/legal_research/draft_1')
+async def draft_1(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
+
+
+@app.post('/legal_research/draft_2')
+async def draft_2(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
+
+
+@app.post('/legal_research/draft_3')
+async def draft_3(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
+
+
+@app.post('/legal_research/draft_4')
+async def draft_4(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
+
+
+@app.post('/legal_research/draft_5')
+async def draft_5(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
+
+
+@app.post('/legal_research/draft_6')
+async def draft_6(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
+
+
+@app.post('/legal_research/draft_7')
+async def draft_7(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Cookie': 'session=' + cookie['session']
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    return res.json()
+
+
+@app.post('/basic_bot')
+async def basic_bot(request: Request) -> Response:
+
+    item = await request.json()
+    url = host + request.url.path[1:]
+    body = json.dumps(item)
+    headers = {
+        'Accept': '*/*',
+        'Content-Type':'application/json',
+    }
+
+    res = requests.post(url,body,headers=headers)
+
+    cookie['session'] = res.cookies['session']
+
+    return res.json()
